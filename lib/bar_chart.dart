@@ -1,13 +1,19 @@
-import 'dart:math';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:sorting/cubit/sorting_cubit_state.dart';
+import 'package:sorting/sorting_controller.dart';
 import 'package:sorting/utility/bubble_sort.dart';
 import 'package:stacked_chart/stacked_chart.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'bar_chart_data.dart';
+import 'cubit/sorting_cubit.dart';
 
 class BarChart extends StatefulWidget {
-  const BarChart({Key? key}) : super(key: key);
+  final SortingController sortingController;
+
+  const BarChart({Key? key, required this.sortingController}) : super(key: key);
 
   @override
   _BarChartState createState() => _BarChartState();
@@ -16,40 +22,81 @@ class BarChart extends StatefulWidget {
 class _BarChartState extends State<BarChart> {
   BubbleSort bubbleSort = BubbleSort(unsortedList: [5, 8, 11, 8, 3, 1, 10]);
   List<IndexStatus> indexStatusList = [];
+  late StreamSubscription<PlaybackState> _playbackSubscription;
+  late SortingCubit _sortingCubit;
 
   @override
   void initState() {
-    createIndexStatusFromArray();
     super.initState();
+    _sortingControllerStateChange();
+    _sortingCubit = SortingCubit(bubbleSort);
   }
 
-  void createIndexStatusFromArray() {
-    indexStatusList.clear();
+  @override
+  void dispose() {
+    _playbackSubscription.cancel();
+    _sortingCubit.close();
+    super.dispose();
+  }
+
+  void _sortingControllerStateChange() {
+    _playbackSubscription =
+        widget.sortingController.playbackNotifier.listen((state) {
+          switch (state) {
+            case PlaybackState.play:
+              _sortingCubit.playPressed();
+              break;
+            case PlaybackState.pause:
+              _sortingCubit.pausedPressed();
+              break;
+            case PlaybackState.next:
+              _sortingCubit.nextPressed();
+              break;
+            case PlaybackState.previous:
+              _sortingCubit.previousPressed();
+              break;
+            case PlaybackState.restart:
+              _sortingCubit.restartPressed();
+              break;
+          }
+        });
+  }
+
+  List<IndexStatus> createIndexStatusFromArray(List<int> unsortedList) {
     final List<IndexStatus> newIndexStatusList = [];
-    bubbleSort.bubbleSort();
-    bubbleSort.unsortedList.asMap().forEach(
+    unsortedList.asMap().forEach(
       (index, value) {
         newIndexStatusList.add(
           IndexStatus(
               value: value,
               index: index,
               isChanged: value > 10 ? true : false,
-              onPressed: createIndexStatusFromArray
           ),
         );
       },
     );
-    setState(
-      () {
-        indexStatusList = newIndexStatusList;
-      },
-    );
+    return newIndexStatusList;
   }
 
   @override
   Widget build(BuildContext context) {
+    return BlocBuilder<SortingCubit, SortingCubitState>(
+      bloc: _sortingCubit,
+      builder: (BuildContext context, SortingCubitState state) {
+        if (state is SortingInitialState){
+          return _chartBody(createIndexStatusFromArray(state.unsortedList), context);
+        } else if (state is SortingRebuildState) {
+          return _chartBody(createIndexStatusFromArray(state.unsortedList), context);
+        } else {
+          return Container();
+        }
+      },
+    );
+  }
+
+  StackedChart _chartBody(List<IndexStatus> data, BuildContext context) {
     return StackedChart(
-      data: indexStatusList,
+      data: data,
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       size: Size(MediaQuery.of(context).size.width - 30, 150),
       showLabel: true,

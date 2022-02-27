@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:sorting/sorting_controller.dart';
 
 import 'bar_chart.dart';
 
@@ -21,7 +22,14 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  late final SortingController _sortingController;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,7 +40,7 @@ class MyHomePage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            BarChart(),
+            BarChart(sortingController: _sortingController,),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -41,7 +49,7 @@ class MyHomePage extends StatelessWidget {
                     CupertinoIcons.arrow_counterclockwise,
                     size: 16,
                   ),
-                  onPressed: () {},
+                  onPressed: () => _sortingController.restart(),
                   mini: true,
                 ),
                 FloatingActionButton(
@@ -49,17 +57,25 @@ class MyHomePage extends StatelessWidget {
                     CupertinoIcons.arrow_left_circle,
                     size: 16,
                   ),
-                  onPressed: () {},
+                  onPressed: () => _sortingController.previous(),
                   mini: true,
                 ),
                 FloatingActionButton(
-                    child: Icon(CupertinoIcons.play_arrow), onPressed: () {}),
+                  child: Icon(
+                      _sortingController.currentState == PlaybackState.play
+                          ? CupertinoIcons.pause
+                          : CupertinoIcons.play_arrow),
+                  onPressed: () =>
+                      _sortingController.currentState == PlaybackState.play
+                          ? _sortingController.pause()
+                          : _sortingController.play(),
+                ),
                 FloatingActionButton(
                   child: Icon(
                     CupertinoIcons.arrow_right_circle,
                     size: 16,
                   ),
-                  onPressed: () {},
+                  onPressed: () => _sortingController.next(),
                   mini: true,
                 ),
               ],
@@ -68,5 +84,11 @@ class MyHomePage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _sortingController = SortingController();
   }
 }
