@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:sorting/cubit/sorting_cubit_state.dart';
+import 'package:sorting/model/swap_indices.dart';
 import 'package:sorting/sorting_controller.dart';
 import 'package:sorting/utility/bubble_sort.dart';
 import 'package:stacked_chart/stacked_chart.dart';
@@ -62,7 +63,7 @@ class _BarChartState extends State<BarChart> {
         });
   }
 
-  List<IndexStatus> createIndexStatusFromArray(List<int> unsortedList) {
+  List<IndexStatus> createIndexStatusFromArray(List<int> unsortedList, SwapIndices swapIndices) {
     final List<IndexStatus> newIndexStatusList = [];
     unsortedList.asMap().forEach(
       (index, value) {
@@ -70,7 +71,7 @@ class _BarChartState extends State<BarChart> {
           IndexStatus(
               value: value,
               index: index,
-              isChanged: value > 10 ? true : false,
+              isChanged: (index == swapIndices.firstIndex || index == swapIndices.secondIndex) ? true : false,
           ),
         );
       },
@@ -84,9 +85,9 @@ class _BarChartState extends State<BarChart> {
       bloc: _sortingCubit,
       builder: (BuildContext context, SortingCubitState state) {
         if (state is SortingInitialState){
-          return _chartBody(createIndexStatusFromArray(state.unsortedList), context);
+          return _chartBody(createIndexStatusFromArray(state.unsortedList, state.swapIndices), context);
         } else if (state is SortingRebuildState) {
-          return _chartBody(createIndexStatusFromArray(state.unsortedList), context);
+          return _chartBody(createIndexStatusFromArray(state.unsortedList, state.swapIndices), context);
         } else {
           return Container();
         }

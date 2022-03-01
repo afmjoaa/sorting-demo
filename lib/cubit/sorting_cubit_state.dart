@@ -1,11 +1,13 @@
 import 'package:equatable/equatable.dart';
+import 'package:sorting/model/swap_indices.dart';
 
 abstract class SortingCubitState extends Equatable {}
 
 class SortingInitialState extends SortingCubitState {
   final List<int> unsortedList;
+  final SwapIndices swapIndices;
 
-  SortingInitialState(this.unsortedList);
+  SortingInitialState(this.unsortedList, this.swapIndices);
 
   @override
   List<Object?> get props => [this.unsortedList];
@@ -16,8 +18,9 @@ class SortingInitialState extends SortingCubitState {
 
 class SortingRebuildState extends SortingCubitState {
   final List<int> unsortedList;
+  final SwapIndices swapIndices;
 
-  SortingRebuildState(this.unsortedList);
+  SortingRebuildState(this.unsortedList, this.swapIndices);
 
   @override
   List<Object?> get props => [DateTime.now(), this.unsortedList];
