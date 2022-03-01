@@ -1,22 +1,26 @@
-import 'dart:io';
+import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:sorting/cubit/sorting_cubit_state.dart';
 import 'package:sorting/model/swap_indices.dart';
 import 'package:sorting/utility/bubble_sort.dart';
 
+import '../sorting_controller.dart';
+
 class SortingCubit extends Cubit<SortingCubitState> {
   BubbleSort bubbleSort;
-  SortingCubit(this.bubbleSort) : super(SortingInitialState(bubbleSort.unsortedList, SwapIndices(-1,-1)));
+  final SortingController sortingController;
+  late StreamSubscription<List<int>> playSubscription;
+  SortingCubit(this.bubbleSort, this.sortingController) : super(SortingInitialState(bubbleSort.unsortedList, SwapIndices(-1,-1)));
 
   void nextPressed() {
     bubbleSort.runForward();
-    print('${bubbleSort.unsortedList} and ${bubbleSort.j} and ${bubbleSort.i}');
+    // print('${bubbleSort.unsortedList} and ${bubbleSort.j} and ${bubbleSort.i}');
     emit(SortingRebuildState(bubbleSort.unsortedList, SwapIndices(bubbleSort.j-1, bubbleSort.j)));
   }
 
   void restartPressed(){
-    bubbleSort = BubbleSort(unsortedList: [5, 8, 11, 8, 3, 1, 10]);
+    bubbleSort = BubbleSort(unsortedList: [5, 8, 11, 8, 3, 1, 10], sortingController: sortingController);
     emit(SortingRebuildState(bubbleSort.unsortedList, SwapIndices(-1,-1)));
   }
 
@@ -26,15 +30,15 @@ class SortingCubit extends Cubit<SortingCubitState> {
   }
 
   void playPressed() {
-    // var iterableList = bubbleSort.bubbleSort(true);
-    // iterableList.forEach((element) {
-    //   emit(SortingRebuildState(element));
-    //   sleep(Duration(seconds: 2));
-    // });
+    var streamList = bubbleSort.playBubbleSort();
+    playSubscription = streamList.listen((event) {
+        emit(SortingRebuildState(bubbleSort.unsortedList, SwapIndices(bubbleSort.j-1, bubbleSort.j)));
+    });
   }
 
   void pausedPressed() {
-    // bubbleSort.isInterrupted = true;
-    // emit(SortingRebuildState(bubbleSort.unsortedList));
+    bubbleSort.pauseBubbleSort();
+    playSubscription.cancel();
   }
+
 }

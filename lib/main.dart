@@ -60,15 +60,21 @@ class _MyHomePageState extends State<MyHomePage> {
                   onPressed: () => _sortingController.previous(),
                   mini: true,
                 ),
-                FloatingActionButton(
-                  child: Icon(
-                      _sortingController.currentState == PlaybackState.play
-                          ? CupertinoIcons.pause
-                          : CupertinoIcons.play_arrow),
-                  onPressed: () =>
-                      _sortingController.currentState == PlaybackState.play
-                          ? _sortingController.pause()
-                          : _sortingController.play(),
+                StreamBuilder<bool>(
+                  stream: _sortingController.playbackNotifier.map((event) => event == PlaybackState.play),
+                  builder: (context, snapshot) {
+                    return FloatingActionButton(
+                      child: Icon(
+                          snapshot.data ?? false
+                              ? CupertinoIcons.pause
+                              : CupertinoIcons.play_arrow),
+                      onPressed: () {
+                          _sortingController.currentState == PlaybackState.play
+                              ? _sortingController.pause()
+                              : _sortingController.play();
+                      }
+                    );
+                  }
                 ),
                 FloatingActionButton(
                   child: Icon(

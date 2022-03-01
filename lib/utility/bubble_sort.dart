@@ -1,33 +1,43 @@
 import 'package:sorting/model/reverse_model.dart';
 import 'package:sorting/model/swap_indices.dart';
 
+import '../sorting_controller.dart';
+
 class BubbleSort {
   late List<int> unsortedList;
   late List<int> previousUnsortedList;
+  final SortingController sortingController;
   List<ReverseModel> reverseStack = [];
   bool isInterrupted = false;
   int i = 0;
   int j = 0;
 
-  BubbleSort({required this.unsortedList}): previousUnsortedList = [...unsortedList];
+  BubbleSort({required this.unsortedList, required this.sortingController}): previousUnsortedList = [...unsortedList];
 
-  Iterable<List<int>> bubbleSort(bool isPlaying) sync* {
-    int listLength = unsortedList.length;
-    bool swapped = true;
-    if (isPlaying) isInterrupted = false;
-    while (swapped) {
-      swapped = false;
-      for (j = 0; j < listLength - i - 1; j ++) {
-        if (unsortedList[j] > unsortedList[j + 1]) {
-          swapped = true;
-          swapListItem(unsortedList, SwapIndices(j, j + 1));
-          yield unsortedList;
-          if (isInterrupted || !isPlaying) break;
-        }
+  Stream<List<int>> playBubbleSort() async* {
+    List<int> sortedList = [...unsortedList];
+    sortedList.sort();
+    isInterrupted = false;
+
+    while (!isInterrupted) {
+      if (areListsEqual(unsortedList, sortedList)){
+        sortingController.pause();
+        break;
       }
-      i += 1;
+      yield await returnCurrentListWithDelay();
     }
-    yield unsortedList;
+  }
+
+  void pauseBubbleSort() {
+    isInterrupted = true;
+    print('pause');
+  }
+
+  Future<List<int>> returnCurrentListWithDelay() {
+    return Future.delayed(Duration(seconds: 1), (){
+      runForward();
+      return unsortedList;
+    });
   }
 
   swapListItem(List<int> lst, SwapIndices swapIndices) {
@@ -57,7 +67,7 @@ class BubbleSort {
       i += 1;
       j = 0;
       if (areListsEqual(unsortedList, previousUnsortedList)) {
-        i = listLength - 1;
+        i = listLength;
         reverseStack.add(
             ReverseModel(
                 i,
@@ -70,12 +80,6 @@ class BubbleSort {
       previousUnsortedList = [...unsortedList];
     }
 
-    reverseStack.add(
-      ReverseModel(
-          i,
-          j,
-          null,
-          [...unsortedList]));
     return unsortedList;
   }
 
@@ -84,12 +88,11 @@ class BubbleSort {
     unsortedList = [...reverseStack.last.unsortedArray];
     i = reverseStack.last.i;
     j = reverseStack.last.j!;
-    print('$i and $j and ${unsortedList}');
+    // print('$i and $j and ${unsortedList}');
     return unsortedList;
   }
 
   bool areListsEqual(var list1, var list2) {
-    // check if elements are equal
     for(int i=0;i<list1.length;i++) {
       if(list1[i]!=list2[i]) {
         return false;

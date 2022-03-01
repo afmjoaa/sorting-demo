@@ -21,7 +21,6 @@ class BarChart extends StatefulWidget {
 }
 
 class _BarChartState extends State<BarChart> {
-  BubbleSort bubbleSort = BubbleSort(unsortedList: [5, 8, 11, 8, 3, 1, 10]);
   List<IndexStatus> indexStatusList = [];
   late StreamSubscription<PlaybackState> _playbackSubscription;
   late SortingCubit _sortingCubit;
@@ -29,8 +28,9 @@ class _BarChartState extends State<BarChart> {
   @override
   void initState() {
     super.initState();
+    BubbleSort bubbleSort = BubbleSort(unsortedList: [5, 8, 11, 8, 3, 1, 10], sortingController: widget.sortingController);
     _sortingControllerStateChange();
-    _sortingCubit = SortingCubit(bubbleSort);
+    _sortingCubit = SortingCubit(bubbleSort, widget.sortingController);
   }
 
   @override
